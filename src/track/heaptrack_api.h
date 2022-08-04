@@ -48,6 +48,8 @@ extern "C" {
 __attribute__((weak)) void heaptrack_malloc(void* ptr, size_t size);
 __attribute__((weak)) void heaptrack_realloc(void* ptr_in, size_t size, void* ptr_out);
 __attribute__((weak)) void heaptrack_free(void* ptr);
+__attribute__((weak)) void heaptrack_pause();
+__attribute__((weak)) void heaptrack_resume();
 
 #ifdef __cplusplus
 }
@@ -64,6 +66,14 @@ __attribute__((weak)) void heaptrack_free(void* ptr);
 #define heaptrack_report_free(ptr)                                                                                     \
     if (heaptrack_free)                                                                                                \
     heaptrack_free(ptr)
+
+#define heaptrack_report_pause()                                                                                       \
+    if (heaptrack_pause)                                                                                               \
+    heaptrack_pause()
+
+#define heaptrack_report_resume()                                                                                      \
+    if (heaptrack_resume)                                                                                              \
+    heaptrack_resume()
 
 #else // HEAPTRACK_API_DLSYM
 
@@ -91,8 +101,10 @@ struct heaptrack_api_t
     void (*malloc)(void*, size_t);
     void (*free)(void*);
     void (*realloc)(void*, size_t, void*);
+    void (*pause)();
+    void (*resume)();
 };
-static struct heaptrack_api_t heaptrack_api = {0, 0, 0};
+static struct heaptrack_api_t heaptrack_api = {0, 0, 0, 0, 0};
 
 void heaptrack_init_api()
 {
@@ -109,6 +121,14 @@ void heaptrack_init_api()
         sym = dlsym(RTLD_NEXT, "heaptrack_free");
         if (sym)
             heaptrack_api.free = (void (*)(void*))sym;
+
+        sym = dlsym(RTLD_NEXT, "heaptrack_pause");
+        if (sym)
+            heaptrack_api.pause= (void (*)(void*))sym;
+
+        sym = dlsym(RTLD_NEXT, "heaptrack_resume");
+        if (sym)
+            heaptrack_api.resume= (void (*)(void*))sym;
 
         initialized = 1;
     }
@@ -133,6 +153,20 @@ void heaptrack_init_api()
         heaptrack_init_api();                                                                                          \
         if (heaptrack_api.free)                                                                                        \
             heaptrack_api.free(ptr);                                                                                   \
+    } while (0)
+
+#define heaptrack_report_pause(ptr)                                                                                    \
+    do {                                                                                                               \
+        heaptrack_init_api();                                                                                          \
+        if (heaptrack_api.pause)                                                                                       \
+            heaptrack_api.pause(ptr);                                                                                  \
+    } while (0)
+
+#define heaptrack_report_resume(ptr)                                                                                   \
+    do {                                                                                                               \
+        heaptrack_init_api();                                                                                          \
+        if (heaptrack_api.resume)                                                                                      \
+            heaptrack_api.resume(ptr);                                                                                 \
     } while (0)
 
 #endif // HEAPTRACK_API_DLSYM
