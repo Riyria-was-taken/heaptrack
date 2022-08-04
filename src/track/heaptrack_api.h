@@ -106,7 +106,7 @@ struct heaptrack_api_t
 };
 static struct heaptrack_api_t heaptrack_api = {0, 0, 0, 0, 0};
 
-void heaptrack_init_api()
+static void heaptrack_init_api()
 {
     static int initialized = 0;
     if (!initialized) {
