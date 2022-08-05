@@ -124,11 +124,11 @@ static void heaptrack_init_api()
 
         sym = dlsym(RTLD_NEXT, "heaptrack_pause");
         if (sym)
-            heaptrack_api.pause= (void (*)(void*))sym;
+            heaptrack_api.pause = (void (*)())sym;
 
         sym = dlsym(RTLD_NEXT, "heaptrack_resume");
         if (sym)
-            heaptrack_api.resume= (void (*)(void*))sym;
+            heaptrack_api.resume = (void (*)())sym;
 
         initialized = 1;
     }
@@ -155,18 +155,18 @@ static void heaptrack_init_api()
             heaptrack_api.free(ptr);                                                                                   \
     } while (0)
 
-#define heaptrack_report_pause(ptr)                                                                                    \
+#define heaptrack_report_pause()                                                                                    \
     do {                                                                                                               \
         heaptrack_init_api();                                                                                          \
         if (heaptrack_api.pause)                                                                                       \
-            heaptrack_api.pause(ptr);                                                                                  \
+            heaptrack_api.pause();                                                                                  \
     } while (0)
 
-#define heaptrack_report_resume(ptr)                                                                                   \
+#define heaptrack_report_resume()                                                                                   \
     do {                                                                                                               \
         heaptrack_init_api();                                                                                          \
         if (heaptrack_api.resume)                                                                                      \
-            heaptrack_api.resume(ptr);                                                                                 \
+            heaptrack_api.resume();                                                                                 \
     } while (0)
 
 #endif // HEAPTRACK_API_DLSYM
